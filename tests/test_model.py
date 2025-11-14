@@ -7,10 +7,10 @@ from ml.model import train_model, inference, compute_model_metrics
 from train_model import cat_features  # import list from script
 
 
-# Helper: resolve path for GitHub Actions
+# Resolve path to census.csv from repo root, reliable in GH Actions
 def get_data_path():
-    project_path = os.getcwd()
-    return os.path.join(project_path, "data", "census.csv")
+    repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(repo_root, "data", "census.csv")
 
 
 # TEST 1
