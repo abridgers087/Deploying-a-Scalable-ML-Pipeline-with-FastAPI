@@ -1,61 +1,67 @@
+import os
 import pandas as pd
+from sklearn.model_selection import train_test_split
+
 from ml.data import process_data
 from ml.model import train_model, inference, compute_model_metrics
-from train_model import cat_features
+from train_model import cat_features  # import list from script
 
 
-# Create synthetic sample dataset for testing
-def sample_dataframe():
-    return pd.DataFrame({
-        "age": [37],
-        "workclass": ["Private"],
-        "fnlgt": [178356],
-        "education": ["HS-grad"],
-        "education-num": [10],
-        "marital-status": ["Married-civ-spouse"],
-        "occupation": ["Prof-specialty"],
-        "relationship": ["Husband"],
-        "race": ["White"],
-        "sex": ["Male"],
-        "capital-gain": [0],
-        "capital-loss": [0],
-        "hours-per-week": [40],
-        "native-country": ["United-States"],
-        "salary": ["<=50K"]
-    })
+# Helper: resolve path for GitHub Actions
+def get_data_path():
+    project_path = os.getcwd()
+    return os.path.join(project_path, "data", "census.csv")
 
 
-# TEST 1: Model training returns valid model object
+# TEST 1
 def test_train_model_returns_model():
-    df = sample_dataframe()
-    X, y, encoder, lb = process_data(
-        df,
+    data = pd.read_csv(get_data_path())
+    train, test = train_test_split(data, test_size=0.20, random_state=42)
+
+    X_train, y_train, encoder, lb = process_data(
+        train,
         categorical_features=cat_features,
         label="salary",
         training=True,
     )
-    model = train_model(X, y)
+
+    model = train_model(X_train, y_train)
+
     assert hasattr(model, "predict")
 
 
-# TEST 2: Inference output shape matches input rows
+# TEST 2
 def test_inference_output_length():
-    df = sample_dataframe()
-    X, y, encoder, lb = process_data(
-        df,
+    data = pd.read_csv(get_data_path())
+    train, test = train_test_split(data, test_size=0.20, random_state=42)
+
+    X_train, y_train, encoder, lb = process_data(
+        train,
         categorical_features=cat_features,
         label="salary",
         training=True,
     )
-    model = train_model(X, y)
-    preds = inference(model, X)
-    assert len(preds) == len(X)
+
+    model = train_model(X_train, y_train)
+
+    X_test, y_test, _, _ = process_data(
+        test,
+        categorical_features=cat_features,
+        label="salary",
+        training=False,
+        encoder=encoder,
+        lb=lb,
+    )
+
+    preds = inference(model, X_test)
+    assert len(preds) == len(X_test)
 
 
-# TEST 3: compute_model_metrics returns float values
+# TEST 3
 def test_compute_model_metrics_returns_values():
     y_true = [0, 1, 1, 0]
     y_pred = [0, 1, 0, 0]
+
     precision, recall, fbeta = compute_model_metrics(y_true, y_pred)
 
     assert isinstance(precision, float)
