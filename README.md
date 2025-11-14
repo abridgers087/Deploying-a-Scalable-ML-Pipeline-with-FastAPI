@@ -1,79 +1,90 @@
 # D501 Machine Learning DevOps — FastAPI Model Deployment
 
-This project demonstrates how to serve a trained machine learning model using a RESTful API built with FastAPI. The model is trained locally and loaded for inference through a `POST /predict` endpoint. This repository includes reproducible environment setup, model packaging, version control structure, and basic API-based model inference.
+This project demonstrates deployment of a machine learning pipeline using FastAPI, scikit-learn, GitHub Actions, DVC, and pytest. A classification model is trained on the census.csv dataset to predict whether an individual's income is <=50K or >50K annually based on demographic features from the UCI Census Income dataset.<Br>
 
----
+The trained model is served via a REST API, which allows inference through a POST endpoint. This repository includes:
+
+- Model training and packaging
+- Reproducible data pipeline
+- Unit testing and continuous integration
+- Slice-based model performance evaluation
+- FastAPI model serving<br>
 
 ## Getting Started
 
 ### Clone the repository
 
-git clone https://github.com/abridgers087/Deploying-a-Scalable-ML-Pipeline-with-FastAPI.git
-cd Deploying-a-Scalable-ML-Pipeline-with-FastAPI
+git clone https://github.com/abridgers087/Deploying-a-Scalable-ML-Pipeline-with-FastAPI.git<br>
+cd Deploying-a-Scalable-ML-Pipeline-with-FastAPI<br>
 
 ### Create and activate a virtual environment
 
-python -m venv venv
-.\venv\Scripts\activate # Windows
+python -m venv venv<br>
+.\venv\Scripts\activate # Windows<Br>
 
 ### Install dependencies
 
-pip install -r requirements.txt
+pip install -r requirements.txt<br>
 
 ### Train the model
 
-python model/train_model.py
+python model/train_model.py<Br>
 
-### Launch the API
+### Example training output:
 
-uvicorn app.main:app --reload
+Precision: 0.7419 | Recall: 0.6384 | F1: 0.6863<br>
+Reference: screenshots/model_train.png<br>
 
----
+### Slice-Based Performance
 
-## Data Versioning
+Slice-based metrics evaluate fairness and performance differences for different categorical groups (e.g., education, workclass, marital status). Results are saved to slice_output.txt.<br>
+Reference: screenshots/slice_output.png
 
-This project uses DVC (Data Version Control) to track the `census.csv` dataset without storing the raw data directly in GitHub. The dataset is added to DVC and referenced via a `.dvc` tracking file so that the data can be reproduced reliably and consistently.
+### Unit Testing
 
-Commands used:
+Tests validate:<Br>
 
-- `dvc init`
-- `dvc add data/census.csv`
-- `git add data/census.csv.dvc .gitignore`
-- `git commit -m "Track census data with DVC"`
+- Model successfully trains and returns a model object
+- Inference returns predictions of correct length
+- Metric calculation returns float values<br>
 
-The raw dataset remains local, while the tracking file is committed and version-controlled.
+Run tests: pytest -q
+Reference: screenshots/unit_test.png
 
-Working in a command line environment is recommended for ease of use with git and dvc. If on Windows, WSL1 or 2 is recommended.
+### Continuous Integration (GitHub Actions)
 
-# Environment Set up (pip or conda)
+Pipeline automatically runs on push and validates:<br>
 
-- Option 1: use the supplied file `environment.yml` to create a new environment with conda
-- Option 2: use the supplied file `requirements.txt` to create a new environment with pip
+- Environment setup
+- flake8 linting
+- pytest execution<br>
 
-## Repositories
+All checks must pass before merge.
+Reference: screenshots/continuous_int.png
 
-- Create a directory for the project and initialize git.
-  - As you work on the code, continually commit changes. Trained models you want to use in production must be committed to GitHub.
-- Connect your local git repo to GitHub.
-- Setup GitHub Actions on your repo. You can use one of the pre-made GitHub Actions if at a minimum it runs pytest and flake8 on push and requires both to pass without error.
-  - Make sure you set up the GitHub Action to have the same version of Python as you used in development.
+### FastAPI Model Inference
 
-# Data
+Start the API:<Br>
 
-- Download census.csv and commit it to dvc.
-- This data is messy, try to open it in pandas and see what you get.
-- To clean it, use your favorite text editor to remove all spaces.
+- uvicorn main:app --reload<br>
 
-# Model
+Open Swagger docs in a browser: http://127.0.0.1:8000/docs<br>
 
-- Using the starter code, write a machine learning model that trains on the clean data and saves the model. Complete any function that has been started.
-- Write unit tests for at least 3 functions in the model code.
-- Write a function that outputs the performance of the model on slices of the data.
-  - Suggestion: for simplicity, the function can just output the performance on slices of just the categorical features.
-- Write a model card using the provided template.
+Example inference payload:
+{
+"age": 37,
+"workclass": "Private",
+"education": "Masters",
+"marital-status": "Married-civ-spouse",
+"occupation": "Exec-managerial",
+"relationship": "Husband",
+"race": "White",
+"sex": "Male",
+"hours-per-week": 40,
+"native-country": "United-States"
+}<br>
 
-# API Creation
+Example response:
+{ "result": ">50K" }<br>
 
-- Create a RESTful API using FastAPI this must implement:
-  - GET on the root giving a welcome message.
-  - POST that does model inference.
+RScreenshot: screenshots/local_api.png
